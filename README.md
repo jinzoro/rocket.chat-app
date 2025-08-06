@@ -211,34 +211,80 @@ rocketchat-app/
 └── README.md                 # This file
 ```
 
-## Troubleshooting
+## 🐛 Troubleshooting
 
 ### Common Issues:
 
 **Port already in use:**
-```bash
-# Change ROCKETCHAT_PORT in .env file
-ROCKETCHAT_PORT=3001
-```
+If you see an error message indicating that port 3000 is already in use, you can change the port on which Rocket.Chat runs.
 
-**MongoDB connection issues:**
+1.  Open the `.env` file.
+2.  Change the `ROCKETCHAT_PORT` variable to a different port, for example:
+    ```
+    ROCKETCHAT_PORT=3001
+    ```
+3.  Restart the application: `make restart`
+
+**MongoDB Connection Issues:**
+If the Rocket.Chat container has trouble connecting to MongoDB, you can check the replica set status.
+
 ```bash
 # Check replica set status
 make init-replica
 ```
 
-**Container startup problems:**
+If the replica set is not initialized, this command will attempt to initialize it.
+
+**Container Startup Problems:**
+If containers are not starting correctly, check the logs for errors.
+
 ```bash
-# Check logs
+# Check logs for all services
+make logs
+
+# Check logs for a specific service
 make logs-app
 make logs-db
 ```
 
-**Reset everything:**
+**"Nuclear Option" - Reset Everything:**
+If you want to start from a clean slate, you can use the `reset` command. This will remove all data, including messages, users, and settings.
+
 ```bash
-# Nuclear option - removes all data!
+# ⚠️ This will delete ALL data!
 make reset
 ```
+
+### Vulnerability Scanning:
+You can scan the Docker images for known vulnerabilities using the `trivy-scan` command.
+
+```bash
+make trivy-scan
+```
+
+This will use Trivy to scan the `rocketchat/rocket.chat` and `mongo` images for high and critical severity vulnerabilities.
+
+## 🤝 Contributing
+
+Contributions are welcome! If you'd like to improve this project, please follow these steps:
+
+1.  **Fork the repository.**
+2.  **Create a new branch** for your feature or bug fix:
+    ```bash
+    git checkout -b feature/my-new-feature
+    ```
+3.  **Make your changes.**
+4.  **Commit your changes** with a clear and descriptive commit message:
+    ```bash
+    git commit -m "feat: Add new feature"
+    ```
+5.  **Push to your branch:**
+    ```bash
+    git push origin feature/my-new-feature
+    ```
+6.  **Create a pull request.**
+
+Please make sure your code adheres to the existing style and conventions.
 
 ## 📱 Mobile Apps
 

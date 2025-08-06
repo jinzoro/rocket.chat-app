@@ -1,6 +1,6 @@
 services:
   mongodb:
-    image: mongo:${MONGO_VERSION:-6.0}
+    image: mongo:${MONGO_VERSION:-8.0.12}
     container_name: rocketchat-mongodb
     restart: unless-stopped
     volumes:
@@ -17,7 +17,7 @@ services:
       start_period: 60s
 
   mongo-init-replica:
-    image: mongo:${MONGO_VERSION:-6.0}
+    image: mongo:${MONGO_VERSION:-8.0.12}
     container_name: rocketchat-mongo-init
     command: |
       bash -c '
@@ -30,17 +30,17 @@ services:
       fi
       
       # Try to initialize replica set
-      for i in $$(seq 1 10); do
-        echo "Attempt $$i: Initializing replica set..."
-        result=$$(mongosh mongodb:27017/rocketchat --quiet --eval \
-          "try { rs.initiate({_id: \"rs0\", members: [{_id: 0, host: \"mongodb:27017\"}]}); print(\"SUCCESS\"); } catch(e) { if(e.message.includes(\"already initialized\")) { print(\"ALREADY_INIT\"); } else { print(\"ERROR: \" + e.message); } }")
+      for i in $(seq 1 10); do
+        echo "Attempt $i: Initializing replica set..."
+        result=$(mongosh mongodb:27017/rocketchat --quiet --eval \
+          "try { rs.initiate({_id: \"rs0\", members: [{_id: 0, host: \"mongodb:27017\"}]}); print(\"SUCCESS\"); } catch(e) { if(e.message.includes(\"already initialized\")) { print(\"ALREADY_INIT\"); } else { print(\"ERROR: " + e.message); } }")
         
-        if echo "$$result" | grep -q "SUCCESS\|ALREADY_INIT"; then
+        if echo "$result" | grep -q "SUCCESS\|ALREADY_INIT"; then
           echo "✅ Replica set initialization completed"
           exit 0
         fi
         
-        echo "❌ Failed: $$result"
+        echo "❌ Failed: $result"
         echo "Waiting 3 seconds before retry..."
         sleep 3
       done
@@ -56,7 +56,7 @@ services:
     restart: "no"
 
   rocketchat:
-    image: registry.rocket.chat/rocketchat/rocket.chat:${ROCKETCHAT_VERSION:-latest}
+    image: registry.rocket.chat/rocketchat/rocket.chat:${ROCKETCHAT_VERSION:-7.9.0}
     container_name: rocketchat-app
     restart: unless-stopped
     depends_on:
@@ -90,6 +90,17 @@ services:
       timeout: 10s
       retries: 5
       start_period: 90s
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: rocketchat-watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - rocketchat
+    command: --interval 3600 --cleanup
+
 
 volumes:
   mongodb_data:

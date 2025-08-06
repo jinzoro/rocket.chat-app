@@ -1,17 +1,17 @@
-.PHONY: help start stop restart logs status clean setup backup restore
+.PHONY: help start stop restart logs status clean setup backup restore trivy-scan
 .DEFAULT_GOAL := help
 
 # Colors for output
-RED := \033[0;31m
-GREEN := \033[0;32m
-YELLOW := \033[1;33m
-BLUE := \033[0;34m
-NC := \033[0m # No Color
+RED := [0;31m
+GREEN := [0;32m
+YELLOW := [1;33m
+BLUE := [0;34m
+NC := [0m # No Color
 
 help: ## Show this help message
 	@echo "$(BLUE)Rocket.Chat Management$(NC)"
 	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(YELLOW)%-15s$(NC) %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(YELLOW)%-15s$(NC) %s\n", $1, $2}'
 
 setup: ## Initial setup - copy .env.example to .env
 	@if [ ! -f .env ]; then \
@@ -74,6 +74,30 @@ backup: ## Create backup of data volumes
 	@docker run --rm -v rocketchat-app_rocketchat_uploads:/data -v $(PWD)/backups:/backup alpine tar czf /backup/rocketchat-uploads-$(shell date +%Y%m%d-%H%M%S).tar.gz -C /data .
 	@echo "$(GREEN)✅ Backup created in backups/ directory$(NC)"
 
+restore: ## Restore data from a backup
+	@echo "$(YELLOW)Listing available backups...$(NC)"
+	@ls -1 backups/
+	@read -p "Enter the full name of the mongodb data backup file to restore: " mongo_backup_file; \
+	read -p "Enter the full name of the rocketchat uploads backup file to restore: " rocketchat_backup_file; \
+	if [ -f "backups/$mongo_backup_file" ] && [ -f "backups/$rocketchat_backup_file" ]; then \
+		echo "$(YELLOW)Stopping services...$(NC)"; \
+		docker-compose down; \
+		echo "$(YELLOW)Removing existing data...$(NC)"; \
+		docker volume rm rocketchat-app_mongodb_data rocketchat-app_rocketchat_uploads; \
+		echo "$(YELLOW)Restoring data from backup...$(NC)"; \
+		docker run --rm -v rocketchat-app_mongodb_data:/data -v $(PWD)/backups:/backup alpine sh -c "tar xzf /backup/$mongo_backup_file -C /data"; \
+		docker run --rm -v rocketchat-app_rocketchat_uploads:/data -v $(PWD)/backups:/backup alpine sh -c "tar xzf /backup/$rocketchat_backup_file -C /data"; \
+		echo "$(GREEN)✅ Restore complete. Starting services...$(NC)"; \
+		docker-compose up -d; \
+	else \
+		echo "$(RED)Backup file not found!$(NC)"; \
+	fi
+
+trivy-scan: ## Scan images for vulnerabilities
+	@echo "$(BLUE)Scanning images for vulnerabilities...$(NC)"
+	@docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL rocketchat/rocket.chat:7.9.0
+	@docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL mongo:8.0.12
+
 shell-app: ## Open shell in Rocket.Chat container
 	@docker-compose exec rocketchat /bin/bash
 
@@ -81,7 +105,7 @@ shell-db: ## Open shell in MongoDB container
 	@docker-compose exec mongodb mongosh
 
 mongo-shell: ## Open MongoDB shell with authentication
-	@docker-compose exec mongodb mongosh --authenticationDatabase admin -u $$(grep MONGO_ROOT_USER .env | cut -d '=' -f2) -p
+	@docker-compose exec mongodb mongosh --authenticationDatabase admin -u $(grep MONGO_ROOT_USER .env | cut -d '=' -f2) -p
 
 init-replica: ## Manually initialize MongoDB replica set (if needed)
 	@echo "$(YELLOW)Checking and initializing MongoDB replica set...$(NC)"
@@ -104,7 +128,7 @@ init-replica: ## Manually initialize MongoDB replica set (if needed)
 	@echo "$(GREEN)✅ Replica set check/initialization complete$(NC)"
 
 reset: ## ⚠️ DANGER: Remove all data and start fresh
-	@echo "$(RED)⚠️  This will delete ALL data! Are you sure? [y/N]$(NC)" && read ans && [ $${ans:-N} = y ]
+	@echo "$(RED)⚠️  This will delete ALL data! Are you sure? [y/N]$(NC)" && read ans && [ ${ans:-N} = y ]
 	@docker-compose down -v
 	@docker-compose up -d
 	@echo "$(GREEN)✅ Application reset complete$(NC)"
@@ -117,3 +141,4 @@ admin-info: ## Show admin user creation info
 	@echo "$(YELLOW)ADMIN_EMAIL=admin@yourdomain.com$(NC)"
 	@echo ""
 	@echo "Then restart with: $(GREEN)make restart$(NC)"
+
