@@ -101,7 +101,7 @@ docker-compose pull && docker-compose up -d  # Update
 ## 🎯 Rocket.Chat Features
 
 ### ✅ **What You Get (Community Edition):**
-- **Unlimited users** and **unlimited messages**
+- **50 users** and **unlimited messages**
 - **File sharing & search** 
 - **Audio & video calls** (WebRTC)
 - **Screen sharing**
