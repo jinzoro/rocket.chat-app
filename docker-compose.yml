@@ -21,13 +21,32 @@ services:
     container_name: rocketchat-mongo-init
     command: |
       bash -c '
-      for i in $$(seq 1 30); do
-        mongosh mongodb:27017/rocketchat \
-          --eval "rs.initiate({_id: \"rs0\", members: [{_id: 0, host: \"mongodb:27017\"}]})" &&
-        s=$$? && break || s=$$?;
-        echo "Tried $$i times. Waiting 5 secs...";
-        sleep 5;
-      done; (exit $$s)
+      echo "Checking replica set status..."
+      
+      # First check if replica set is already initialized
+      if mongosh mongodb:27017 --quiet --eval "rs.status().ok" | grep -q "1"; then
+        echo "✅ Replica set already initialized and healthy"
+        exit 0
+      fi
+      
+      # Try to initialize replica set
+      for i in $$(seq 1 10); do
+        echo "Attempt $$i: Initializing replica set..."
+        result=$$(mongosh mongodb:27017/rocketchat --quiet --eval \
+          "try { rs.initiate({_id: \"rs0\", members: [{_id: 0, host: \"mongodb:27017\"}]}); print(\"SUCCESS\"); } catch(e) { if(e.message.includes(\"already initialized\")) { print(\"ALREADY_INIT\"); } else { print(\"ERROR: \" + e.message); } }")
+        
+        if echo "$$result" | grep -q "SUCCESS\|ALREADY_INIT"; then
+          echo "✅ Replica set initialization completed"
+          exit 0
+        fi
+        
+        echo "❌ Failed: $$result"
+        echo "Waiting 3 seconds before retry..."
+        sleep 3
+      done
+      
+      echo "❌ Failed to initialize replica set after 10 attempts"
+      exit 1
       '
     depends_on:
       mongodb:

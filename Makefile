@@ -84,9 +84,24 @@ mongo-shell: ## Open MongoDB shell with authentication
 	@docker-compose exec mongodb mongosh --authenticationDatabase admin -u $$(grep MONGO_ROOT_USER .env | cut -d '=' -f2) -p
 
 init-replica: ## Manually initialize MongoDB replica set (if needed)
-	@echo "$(YELLOW)Initializing MongoDB replica set...$(NC)"
-	@docker-compose exec mongodb mongosh --eval "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]})"
-	@echo "$(GREEN)✅ Replica set initialized$(NC)"
+	@echo "$(YELLOW)Checking and initializing MongoDB replica set...$(NC)"
+	@docker-compose exec mongodb mongosh --quiet --eval \
+		"try { \
+		  if (rs.status().ok) { \
+		    print('Replica set already initialized and healthy'); \
+		  } else { \
+		    rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongodb:27017'}]}); \
+		    print('Replica set initialized successfully'); \
+		  } \
+		} catch(e) { \
+		  if (e.message.includes('already initialized')) { \
+		    print('Replica set already initialized'); \
+		  } else { \
+		    rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongodb:27017'}]}); \
+		    print('Replica set initialized'); \
+		  } \
+		}"
+	@echo "$(GREEN)✅ Replica set check/initialization complete$(NC)"
 
 reset: ## ⚠️ DANGER: Remove all data and start fresh
 	@echo "$(RED)⚠️  This will delete ALL data! Are you sure? [y/N]$(NC)" && read ans && [ $${ans:-N} = y ]
