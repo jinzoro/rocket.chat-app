@@ -1,11 +1,28 @@
 # Rocket.Chat Application
 
+[![License](https://img.shields.io/badge/License-JIN-blue.svg)](./LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Docker Compose](https://img.shields.io/badge/Docker%20Compose-3.8-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![Rocket.Chat](https://img.shields.io/badge/Rocket.Chat-Latest-F5455C?logo=rocket.chat&logoColor=white)](https://rocket.chat/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-5.0-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Make](https://img.shields.io/badge/Make-Enabled-427819?logo=gnu&logoColor=white)](https://www.gnu.org/software/make/)
+[![Health Checks](https://img.shields.io/badge/Health%20Checks-✓-00D26A)]()
+[![Production Ready](https://img.shields.io/badge/Production-Ready-00D26A)]()
+[![Security](https://img.shields.io/badge/Security-Hardened-FF6B35)]()
+[![Backup](https://img.shields.io/badge/Backup-Automated-4285F4)]()
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey)]()
+[![Shell](https://img.shields.io/badge/Shell-Bash%20%7C%20Zsh-1f425f.svg?logo=gnu-bash&logoColor=white)]()
+[![Free](https://img.shields.io/badge/Price-Free-00D26A?logo=opensourceinitiative&logoColor=white)]()
+[![Open Source](https://img.shields.io/badge/Open%20Source-♥-red?logo=opensource&logoColor=white)](https://opensource.org/)
+[![Maintained](https://img.shields.io/badge/Maintained-Yes-00D26A)]()
+[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg)]()
+
 This Docker Compose setup provides a complete Rocket.Chat application with MongoDB database, featuring environment-based configuration, health checks, and easy management tools.
 
 ## 🚀 What's Included
 
 - **Rocket.Chat Community Edition**: Open-source chat and collaboration platform
-- **MongoDB 6.0**: Database with replica set for optimal performance
+- **MongoDB 5.0**: Database with replica set for optimal performance
 - **Environment Variables**: Secure configuration management
 - **Health Checks**: Automatic service monitoring
 - **Makefile**: Easy management commands
@@ -170,7 +187,7 @@ All configuration is done via `.env` file. Key variables:
 - `MONGO_ROOT_PASSWORD`: MongoDB password (⚠️ required)
 - `ROOT_URL`: Your domain (for production)
 - `ROCKETCHAT_PORT`: Port to expose (default: 3000)
-- `MONGO_VERSION`: MongoDB version (default: 6.0)
+- `MONGO_VERSION`: MongoDB version (default: 5.0)
 - `ROCKETCHAT_VERSION`: Rocket.Chat version (default: latest)
 
 ### Auto-Create Admin User
@@ -190,6 +207,7 @@ rocketchat-app/
 ├── docker-compose.yml        # Development configuration
 ├── docker-compose.prod.yml   # Production configuration
 ├── Makefile                  # Management commands
+├── LICENSE                   # JIN License
 └── README.md                 # This file
 ```
 
