@@ -1,0 +1,89 @@
+services:
+  mongodb:
+    image: mongo:${MONGO_VERSION:-6.0}
+    container_name: rocketchat-mongodb
+    restart: unless-stopped
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    command: mongod --oplogSize 128 --replSet rs0 --storageEngine=wiredTiger
+    networks:
+      - rocketchat
+    healthcheck:
+      test: |
+        test $$(echo "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]}).ok || rs.status().ok" | mongo --quiet) -eq 1
+      interval: 10s
+      start_period: 30s
+      timeout: 5s
+      retries: 5
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?Please set MONGO_ROOT_PASSWORD in .env file}
+
+  mongo-init-replica:
+    image: mongo:${MONGO_VERSION:-6.0}
+    container_name: rocketchat-mongo-init
+    command: >
+      bash -c
+        "for i in `seq 1 30`; do
+          mongo mongodb:27017/rocketchat --eval \"
+            rs.initiate({
+              _id: 'rs0',
+              members: [ { _id: 0, host: 'mongodb:27017' } ]})\" &&
+          s=$$? && break || s=$$?;
+          echo \"Tried $$i times. Waiting 5 secs...\";
+          sleep 5;
+        done; (exit $$s)"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - rocketchat
+    restart: "no"
+
+  rocketchat:
+    image: registry.rocket.chat/rocketchat/rocket.chat:${ROCKETCHAT_VERSION:-latest}
+    container_name: rocketchat-app
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+      - mongo-init-replica
+    ports:
+      - "${ROCKETCHAT_PORT:-3000}:3000"
+    environment:
+      MONGO_URL: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD}@mongodb:27017/rocketchat?authSource=admin&replicaSet=rs0
+      MONGO_OPLOG_URL: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD}@mongodb:27017/local?authSource=admin&replicaSet=rs0
+      ROOT_URL: ${ROOT_URL:-http://localhost:3000}
+      PORT: 3000
+      DEPLOY_METHOD: docker
+      OVERWRITE_SETTING_Show_Setup_Wizard: completed
+      # Optional: Admin user creation
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_PASS: ${ADMIN_PASS:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      # Performance settings
+      SETTING_FileUpload_MaxFileSize: ${MAX_FILE_SIZE:-104857600}
+      # Security settings
+      SETTING_Accounts_TwoFactorAuthentication_Enabled: ${ENABLE_2FA:-true}
+      SETTING_API_Enable_Rate_Limiter: ${ENABLE_RATE_LIMITER:-true}
+    volumes:
+      - rocketchat_uploads:/app/uploads
+      - rocketchat_scripts:/app/bundle/programs/server/assets/app/scripts
+    networks:
+      - rocketchat
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/info"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  mongodb_data:
+  mongodb_config:
+  rocketchat_uploads:
+  rocketchat_scripts:
+
+networks:
+  rocketchat:
+    driver: bridge
