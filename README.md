@@ -4,7 +4,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-3.8-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
 [![Rocket.Chat](https://img.shields.io/badge/Rocket.Chat-Latest-F5455C?logo=rocket.chat&logoColor=white)](https://rocket.chat/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-5.0-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-6.0-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Make](https://img.shields.io/badge/Make-Enabled-427819?logo=gnu&logoColor=white)](https://www.gnu.org/software/make/)
 [![Health Checks](https://img.shields.io/badge/Health%20Checks-✓-00D26A)]()
 [![Production Ready](https://img.shields.io/badge/Production-Ready-00D26A)]()
@@ -22,7 +22,7 @@ This Docker Compose setup provides a complete Rocket.Chat application with Mongo
 ## 🚀 What's Included
 
 - **Rocket.Chat Community Edition**: Open-source chat and collaboration platform
-- **MongoDB 5.0**: Database with replica set for optimal performance
+- **MongoDB 6.0**: Database with replica set for optimal performance
 - **Environment Variables**: Secure configuration management
 - **Health Checks**: Automatic service monitoring
 - **Makefile**: Easy management commands
@@ -187,7 +187,7 @@ All configuration is done via `.env` file. Key variables:
 - `MONGO_ROOT_PASSWORD`: MongoDB password (⚠️ required)
 - `ROOT_URL`: Your domain (for production)
 - `ROCKETCHAT_PORT`: Port to expose (default: 3000)
-- `MONGO_VERSION`: MongoDB version (default: 5.0)
+- `MONGO_VERSION`: MongoDB version (default: 6.0)
 - `ROCKETCHAT_VERSION`: Rocket.Chat version (default: latest)
 
 ### Auto-Create Admin User

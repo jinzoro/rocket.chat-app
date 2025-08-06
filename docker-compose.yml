@@ -1,6 +1,6 @@
 services:
   mongodb:
-    image: mongo:${MONGO_VERSION:-5.0}
+    image: mongo:${MONGO_VERSION:-6.0}
     container_name: rocketchat-mongodb
     restart: unless-stopped
     volumes:
@@ -17,7 +17,7 @@ services:
       start_period: 60s
 
   mongo-init-replica:
-    image: mongo:${MONGO_VERSION:-5.0}
+    image: mongo:${MONGO_VERSION:-6.0}
     container_name: rocketchat-mongo-init
     command: |
       bash -c '
