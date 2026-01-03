@@ -30,17 +30,17 @@ services:
       fi
       
       # Try to initialize replica set
-      for i in $(seq 1 10); do
-        echo "Attempt $i: Initializing replica set..."
-        result=$(mongosh mongodb:27017/rocketchat --quiet --eval \
-          "try { rs.initiate({_id: \"rs0\", members: [{_id: 0, host: \"mongodb:27017\"}]}); print(\"SUCCESS\"); } catch(e) { if(e.message.includes(\"already initialized\")) { print(\"ALREADY_INIT\"); } else { print(\"ERROR: " + e.message); } }")
+      for i in $$(seq 1 10); do
+        echo "Attempt $$i: Initializing replica set..."
+        result=$$(mongosh mongodb:27017/rocketchat --quiet --eval \
+          "try { rs.initiate({_id: \"rs0\", members: [{_id: 0, host: \"mongodb:27017\"}]}); print(\"SUCCESS\"); } catch(e) { if(e.message.includes(\"already initialized\")) { print(\"ALREADY_INIT\"); } else { print(\"ERROR\"); } }")
         
-        if echo "$result" | grep -q "SUCCESS\|ALREADY_INIT"; then
+        if echo "$$result" | grep -q "SUCCESS\|ALREADY_INIT"; then
           echo "✅ Replica set initialization completed"
           exit 0
         fi
         
-        echo "❌ Failed: $result"
+        echo "❌ Failed: $$result"
         echo "Waiting 3 seconds before retry..."
         sleep 3
       done
